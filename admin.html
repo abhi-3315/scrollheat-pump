@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kirloskar Admin Panel</title>
+<style>
+  :root {
+    --navy: #1a2a5e; --navy-light: #2a3f8f; --accent: #e8a020;
+    --green: #16a34a; --red: #dc2626; --bg: #f4f6fb; --card: #ffffff;
+    --border: #dde3ef; --text: #1e2533; --muted: #6b7280; --sidebar-w: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+
+  #admin-login {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #0f1e4a 0%, #1a2a5e 60%, #2a3f8f 100%);
+  }
+  .login-card {
+    background: white; border-radius: 12px; padding: 50px 40px; width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .login-card .badge {
+    display: inline-block; background: #fff3cd; color: #854d0e; font-size: 12px;
+    font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; letter-spacing: .5px;
+  }
+  .login-card h2 { color: var(--navy); font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  .login-card p { color: var(--muted); font-size: 15px; margin-bottom: 30px; }
+  .login-card input {
+    width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 16px; margin-bottom: 16px; outline: none; transition: border .2s;
+  }
+  .login-card input:focus { border-color: var(--navy); }
+  .login-card button {
+    width: 100%; padding: 14px; background: var(--navy); color: white; border: none;
+    border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background .2s;
+  }
+  .login-card button:hover { background: var(--navy-light); }
+  .err { color: var(--red); font-size: 14px; margin-top: -8px; margin-bottom: 12px; display: none; }
+
+  #admin-app { display: none; min-height: 100vh; flex-direction: row; }
+  .sidebar {
+    width: var(--sidebar-w); background: var(--navy); color: white; min-height: 100vh;
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100;
+  }
+  .sidebar-logo { padding: 26px 24px 20px; border-bottom: 1px solid rgba(255,255,255,.12); }
+  .sidebar-logo span { font-size: 12px; color: rgba(255,255,255,.5); display: block; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .sidebar-logo strong { font-size: 18px; letter-spacing: .3px; }
+  .sidebar nav { flex: 1; padding: 20px 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 14px 24px;
+    color: rgba(255,255,255,.7); font-size: 15px; cursor: pointer; transition: all .15s;
+    border-left: 4px solid transparent;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.07); color: white; }
+  .nav-item.active { background: rgba(255,255,255,.12); color: white; border-left-color: var(--accent); font-weight: 600; }
+  .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,.12); }
+  .logout-btn { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.6); cursor: pointer; font-size: 15px; margin-top: 10px; transition: color .2s; }
+  .logout-btn:hover { color: #fca5a5; }
+
+  .main-content { margin-left: var(--sidebar-w); flex: 1; padding: 36px 40px; overflow-y: auto; height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-title { font-size: 26px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .page-sub { font-size: 15px; color: var(--muted); margin-bottom: 30px; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 36px; }
+  .stat-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 24px; display: flex; align-items: flex-start; gap: 16px; }
+  .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 22px; }
+  .stat-icon.blue { background: #dbeafe; color:#1d4ed8; }
+  .stat-icon.green { background: #dcfce7; color:#16a34a; }
+  .stat-icon.amber { background: #fef3c7; color:#d97706; }
+  .stat-icon.red { background: #fee2e2; color:#dc2626; }
+  .stat-num { font-size: 32px; font-weight: 700; line-height: 1; color: var(--navy); margin-bottom: 6px; }
+  .stat-label { font-size: 14px; color: var(--muted); }
+
+  .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px; overflow: hidden; }
+  .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #fafbff; }
+  .card-header h3 { font-size: 16px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-body { padding: 24px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th { background: #f8f9fc; color: var(--navy); font-weight: 700; padding: 14px 18px; text-align: left; border-bottom: 2px solid var(--border); font-size: 13px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+  td { padding: 14px 18px; border-bottom: 1px solid #f0f2f8; vertical-align: middle; color: #374151; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fdfdff; }
+
+  .badge-active  { background: #dcfce7; color: #15803d; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .badge-revoked { background: #fee2e2; color: #b91c1c; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .badge-pending { background: #fef3c7; color: #b45309; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+  .edit-input { width: 100%; min-width: 80px; padding: 6px 10px; border: 1.5px solid var(--navy-light); border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; outline: none; }
+  .edit-input:focus { border-color: var(--accent); }
+  .btn-edit   { background: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn-save   { background: var(--green); color: white; padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; margin-right: 6px; }
+  .btn-cancel { background: var(--red); color: white; padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; }
+
+  .btn         { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-green   { background: var(--green); color: white; }
+  .btn-red     { background: var(--red); color: white; }
+  .btn-ghost   { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+
+  .form-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr auto; gap: 14px; align-items: end; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 14px; font-weight: 600; color: var(--navy); }
+  .form-group input { padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; outline: none; background: white; }
+
+  .data-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
+  .data-tab  { padding: 12px 24px; font-size: 15px; font-weight: 500; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -3px; transition: all .15s; }
+  .data-tab.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 700; }
+  .data-panel { display: none; }
+  .data-panel.active { display: block; }
+  .json-editor { width: 100%; min-height: 250px; padding: 16px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.7; outline: none; background: #fafbff; }
+
+  .toast { position: fixed; bottom: 30px; right: 30px; background: var(--navy); color: white; padding: 16px 24px; border-radius: 8px; font-size: 15px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 9999; transform: translateY(20px); opacity: 0; transition: all .3s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .table-wrapper { padding: 0; overflow-x: auto; width: 100%; }
+  .table-wrapper table { min-width: 100%; }
+  .sticky-col { position: sticky; right: 0; z-index: 10; background: #fff; box-shadow: -4px 0 8px rgba(0,0,0,0.05); text-align: right;}
+  th.sticky-col { background: #f8f9fc; z-index: 11; }
+  tr:nth-child(even) td.sticky-col { background: #fafbff; }
+  tr:hover td.sticky-col { background: #fdfdff; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="admin-login">
+  <div class="login-card">
+    <span class="badge">⚙ ADMIN ACCESS ONLY</span>
+    <h2>Admin Panel</h2>
+    <p>Kirloskar Selection Tool — Management</p>
+    <input type="text" id="a-user" placeholder="Admin Username" autocomplete="off">
+    <input type="password" id="a-pass" placeholder="Admin Password" onkeydown="if(event.key==='Enter') adminLogin()">
+    <div class="err" id="a-err">Invalid admin credentials.</div>
+    <button onclick="adminLogin()">Sign In as Admin</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="admin-app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <span>Kirloskar Chillers</span>
+      <strong>Admin Console</strong>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="switchPage('dashboard')">📊 Dashboard</div>
+      <div class="nav-item" onclick="switchPage('users')">👥 User Management</div>
+      <div class="nav-item" onclick="switchPage('data')">📂 Static Data Editor</div>
+      <div class="nav-item" onclick="switchPage('settings')">⚙ Settings</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="logout-btn" onclick="adminLogout()">🚪 Logout</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Overview of system status</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-icon blue">👥</div><div><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total Users</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-num" id="stat-active">0</div><div class="stat-label">Active Users</div></div></div>
+        <div class="stat-card"><div class="stat-icon red">❌</div><div><div class="stat-num" id="stat-revoked">0</div><div class="stat-label">Revoked Users</div></div></div>
+        <div class="stat-card"><div class="stat-icon amber">⏳</div><div><div class="stat-num" id="stat-pending">0</div><div class="stat-label">Pending Approval</div></div></div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="page-title">User Management</div>
+      <div class="page-sub">Add or manage user access (Connected to Database)</div>
+      <div class="card">
+        <div class="card-header"><h3>Add New User</h3></div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email (Login ID)</label>
+              <input type="email" id="u-email" placeholder="user@example.com">
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="text" id="u-pass" placeholder="Min 4 characters">
+            </div>
+            <div class="form-group">
+              <label>Display Name</label>
+              <input type="text" id="u-display" placeholder="e.g. John Doe">
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="text" id="u-phone" placeholder="Optional">
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button class="btn btn-green" onclick="addUser()">+ Add User</button>
+            </div>
+          </div>
+          <div id="u-err" style="color:var(--red); font-size:14px; display:none;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>All Users</h3></div>
+        <div class="card-body" style="padding:0; overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Display Name</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATIC DATA -->
+    <div class="page" id="page-data">
+      <div class="page-title">Static Data Editor</div>
+      <div class="page-sub">Click "✎ Edit" next to a row to change its values inline.</div>
+      <div class="data-tabs">
+        <div class="data-tab active" onclick="switchDataTab('specs')">Equipment Data Editor</div>
+        <div class="data-tab" onclick="switchDataTab('products')">Product Categories</div>
+        <div class="data-tab" onclick="switchDataTab('notes')">Report Notes</div>
+      </div>
+      <div class="data-panel active" id="dpanel-specs">
+        <div id="specs-container"></div>
+      </div>
+      <div class="data-panel" id="dpanel-products">
+        <div class="card">
+          <div class="card-header"><h3>Application Categories</h3></div>
+          <div class="card-body" style="padding:0; overflow-x:auto;">
+            <table>
+              <thead><tr><th>Application</th><th>Product Type</th><th>Category</th></tr></thead>
+              <tbody id="products-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="data-panel" id="dpanel-notes">
+        <div class="card">
+          <div class="card-header"><h3>Report Notes</h3></div>
+          <div class="card-body">
+            <textarea id="notes-editor" class="json-editor"></textarea>
+            <div style="margin-top:16px; text-align:right;">
+              <button class="btn btn-green" onclick="saveNotes()">Save Notes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-title">Settings</div>
+      <div class="card" style="max-width:500px;">
+        <div class="card-header"><h3>Danger Zone</h3></div>
+        <div class="card-body">
+          <p style="font-size:15px; color:var(--muted); margin-bottom:20px;">Reset all equipment data to factory defaults. User accounts are NOT affected.</p>
+          <button class="btn btn-red" onclick="if(confirm('Reset ALL equipment data to defaults?')) resetAll()">Reset Equipment Data</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// ADMIN LOGIN & SESSION
+// ════════════════════════════════════════
+const KEYS = {
+  staticData:  'kcpl_static_data',
+  adminPass:   'kcpl_admin_pass',
+  session:     'kcpl_admin_session'
+};
+
+function getAdminPass() { return localStorage.getItem(KEYS.adminPass) || 'admin'; }
+
+function adminLogin() {
+  const u = document.getElementById('a-user').value.trim();
+  const p = document.getElementById('a-pass').value;
+  if (u === 'admin' && p === getAdminPass()) {
+    sessionStorage.setItem(KEYS.session, '1');
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-app').style.display   = 'flex';
+    refreshDashboard();
+  } else {
+    document.getElementById('a-err').style.display = 'block';
+  }
+}
+function adminLogout() {
+  sessionStorage.removeItem(KEYS.session);
+  location.reload();
+}
+// Auto-restore session on page reload
+if (sessionStorage.getItem(KEYS.session)) {
+  document.getElementById('admin-login').style.display = 'none';
+  document.getElementById('admin-app').style.display   = 'flex';
+  setTimeout(refreshDashboard, 50);
+}
+
+// ════════════════════════════════════════
+// DATABASE CONNECTED USER MANAGEMENT 
+// ════════════════════════════════════════
+async function refreshDashboard() {
+  try {
+      const response = await fetch('http://127.0.0.1:5000/admin/users');
+      const users = await response.json();
+      
+      document.getElementById('stat-total').innerText   = users.length;
+      document.getElementById('stat-active').innerText  = users.filter(x => x.status === 'active').length;
+      document.getElementById('stat-revoked').innerText = users.filter(x => x.status === 'revoked').length;
+      document.getElementById('stat-pending').innerText = users.filter(x => x.status === 'pending').length;
+  } catch(e) { console.error("Database not running", e); }
+}
+
+async function renderUsers() {
+  try {
+      const response = await fetch('http://127.0.0.1:5000/admin/users');
+      const users = await response.json();
+
+      if (!users.length) {
+          document.getElementById('users-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;">No users found.</td></tr>';
+          return;
+      }
+
+      document.getElementById('users-tbody').innerHTML = users.map(u => {
+          const badge = u.status === 'active'  ? '<span class="badge-active">ACTIVE</span>'  : u.status === 'pending' ? '<span class="badge-pending">PENDING</span>' : '<span class="badge-revoked">REVOKED</span>';
+          
+          const actions = [
+              u.status === 'pending' ? `<button class="btn btn-green" style="margin-right:6px" onclick="updateStatus('${u.email}', 'active')">Approve</button>` : '',
+              u.status === 'active'  ? `<button class="btn btn-red" style="margin-right:6px" onclick="updateStatus('${u.email}', 'revoked')">Revoke</button>` : '',
+              u.status === 'revoked' ? `<button class="btn btn-green" style="margin-right:6px" onclick="updateStatus('${u.email}', 'active')">Re-Activate</button>` : '',
+              `<button class="btn btn-ghost" onclick="deleteUser('${u.email}')">Delete</button>`
+          ].join('');
+
+          return `<tr><td><strong>${u.email}</strong></td><td style="color:#d97706;font-family:monospace">${u.password}</td><td>${u.display_name || '-'}</td><td>${u.phone || '-'}</td><td>${badge}</td><td style="white-space:nowrap">${actions}</td></tr>`;
+      }).join('');
+      
+      refreshDashboard();
+  } catch(e) {
+      document.getElementById('users-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;padding:20px;">Error: Cannot connect to Database. Please make sure python app.py is running.</td></tr>';
+  }
+}
+
+async function addUser() {
+  const email   = (document.getElementById('u-email').value || '').trim().toLowerCase();
+  const pass    = (document.getElementById('u-pass').value || '').trim();
+  const display = (document.getElementById('u-display').value || '').trim();
+  const phone   = (document.getElementById('u-phone').value || '').trim();
+  const errEl   = document.getElementById('u-err');
+
+  if (!email || !pass) { errEl.innerText = 'Email and Password required'; errEl.style.display = 'block'; return; }
+
+  try {
+      const response = await fetch('http://127.0.0.1:5000/admin/add_user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: pass, display_name: display, phone: phone })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+          showToast('✅ User added successfully');
+          ['u-email','u-pass','u-display','u-phone'].forEach(id => document.getElementById(id).value = '');
+          errEl.style.display = 'none';
+          renderUsers();
+      } else {
+          errEl.innerText = result.message; errEl.style.display = 'block';
+      }
+  } catch(e) {
+      errEl.innerText = 'Server connection error.'; errEl.style.display = 'block';
+  }
+}
+
+async function updateStatus(email, status) {
+  try {
+      await fetch('http://127.0.0.1:5000/admin/users/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, status: status })
+      });
+      showToast('✅ Status Updated');
+      renderUsers();
+  } catch(e) { alert("Database connection error"); }
+}
+
+async function deleteUser(email) {
+  if (!confirm('Permanently delete user: ' + email + '?')) return;
+  try {
+      await fetch('http://127.0.0.1:5000/admin/users/' + email, { method: 'DELETE' });
+      showToast('🗑️ User deleted');
+      renderUsers();
+  } catch(e) { alert("Database connection error"); }
+}
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+function switchPage(p) {
+  document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelector(`.nav-item[onclick*="${p}"]`).classList.add('active');
+  if (p === 'users')     renderUsers();
+  if (p === 'data')      renderDataTabs();
+  if (p === 'dashboard') refreshDashboard();
+}
+
+// ════════════════════════════════════════
+// STATIC DATA (Equipment Data)
+// ════════════════════════════════════════
+const DEFAULT_STATIC = {
+  products: [
+    { app:'Chiller',  key:'air_cooled_chiller',        label:'Air Cooled Chiller',        category:'Standard' },
+    { app:'HeatPump', key:'commercial_heat_pump',       label:'COMMERCIAL HEAT PUMP',      category:'Standard' },
+    { app:'HeatPump', key:'swimming_pool_heat_pump',    label:'SWIMMING POOL HEAT PUMP',   category:'Standard' }
+  ],
+  equip_data: {
+    commercial_hp: [
+      { type: 'COMMERCIAL HEAT PUMP', model: 'KSE-AH-14U', cap: 14, cop: 4.2 }
+    ]
+  },
+  notes: ['All data is subject to ±5% manufacturing tolerance.']
+};
+
+function getStatic() {
+  try { return JSON.parse(localStorage.getItem(KEYS.staticData)) || DEFAULT_STATIC; }
+  catch(e) { return DEFAULT_STATIC; }
+}
+function saveStatic(d) { localStorage.setItem(KEYS.staticData, JSON.stringify(d)); }
+
+(function() {
+  if (!localStorage.getItem(KEYS.staticData)) saveStatic(DEFAULT_STATIC);
+})();
+
+const TABLE_TITLES = { commercial_hp: '1. Commercial Heat Pumps', pool_hp: '2. Swimming Pool Heat Pumps', monoblock_hp: '3. Monoblock Heat Pumps', evi_hp: '4. EVI Heat Pumps', high_temp_hp: '5. High Temperature Heat Pumps', chillers: '6. Air Cooled Chillers' };
+let editingRow = { category: null, index: null };
+
+function switchDataTab(t) {
+  document.querySelectorAll('.data-tab, .data-panel').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.data-tab[onclick*="${t}"]`).classList.add('active');
+  document.getElementById('dpanel-' + t).classList.add('active');
+}
+
+function renderDataTabs() {
+  const sd = getStatic();
+  document.getElementById('products-tbody').innerHTML = (sd.  products || []).map(p => `<tr><td>${p.app}</td><td>${p.label}</td><td>${p.category}</td></tr>`).join('');
+  document.getElementById('notes-editor').value = (sd.notes || []).join('\n');
+  renderDetailedSpecs(sd.equip_data || {});
+}
+
+function renderDetailedSpecs(eq) {
+  let html = '';
+  for (const cat in eq) {
+    const dataArray = eq[cat];
+    if (!dataArray || dataArray.length === 0) continue;
+    const keysSet = new Set();
+    dataArray.forEach(row => Object.keys(row).forEach(k => keysSet.add(k)));
+    const cols = Array.from(keysSet);
+    const title = TABLE_TITLES[cat] || cat.toUpperCase();
+
+    html += `<div class="card"><div class="card-header"><h3>${title}</h3></div><div class="card-body table-wrapper"><table><thead><tr>`;
+    cols.forEach(col => html += `<th>${col}</th>`);
+    html += `<th class="sticky-col">Action</th></tr></thead><tbody>`;
+
+    dataArray.forEach((row, idx) => {
+      const isEditing = editingRow.category === cat && editingRow.index === idx;
+      html += '<tr>';
+      cols.forEach(col => {
+        const val = row[col] !== undefined ? row[col] : '';
+        if (isEditing) { html += `<td><input class="edit-input" id="edit-${cat}-${idx}-${col}" value="${String(val).replace(/"/g,'&quot;')}" placeholder="-"></td>`; } 
+        else { html += `<td>${(col === 'model' || col === 'Model') ? `<strong>${val}</strong>` : val}</td>`; }
+      });
+      if (isEditing) { html += `<td class="sticky-col" style="white-space:nowrap;"><button class="btn-save" onclick="saveRow('${cat}',${idx})">✔ Save</button><button class="btn-cancel" onclick="cancelEdit()">✖</button></td>`; } 
+      else { html += `<td class="sticky-col"><button class="btn-edit" onclick="startEdit('${cat}',${idx})">✎ Edit</button></td>`; }
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+  document.getElementById('specs-container').innerHTML = html;
+}
+
+function startEdit(cat, idx) { editingRow = { category: cat, index: idx }; renderDetailedSpecs(getStatic().equip_data); }
+function cancelEdit() { editingRow = { category: null, index: null }; renderDetailedSpecs(getStatic().equip_data); }
+function saveRow(cat, idx) {
+  const sd  = getStatic();
+  const prefix = `edit-${cat}-${idx}-`;
+  const inputs = document.querySelectorAll(`input[id^="${prefix}"]`);
+  inputs.forEach(el => {
+    const col = el.id.substring(prefix.length); 
+    let val = el.value;
+    const orig = sd.equip_data[cat][idx][col];
+    if (typeof orig === 'number' && val.trim() !== '') { const num = Number(val); sd.equip_data[cat][idx][col] = isNaN(num) ? val : num; } 
+    else { sd.equip_data[cat][idx][col] = val; }
+  });
+  saveStatic(sd); cancelEdit(); showToast('✅ Record updated successfully');
+}
+function saveNotes() { const sd = getStatic(); sd.notes = document.getElementById('notes-editor').value.split('\n'); saveStatic(sd); showToast('✅ Notes saved'); }
+function resetAll() { localStorage.removeItem(KEYS.staticData); saveStatic(DEFAULT_STATIC); switchPage('data'); showToast('✅ Data reset to defaults'); }
+function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+</script>
+</body>
+</html>

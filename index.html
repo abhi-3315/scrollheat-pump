@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirloskar Selection Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .auth-links { margin: 15px 0; font-size: 14px; text-align: center; }
+        .auth-links a { color: #1a2a5e; text-decoration: underline; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- ════════ LOGIN PAGE ════════ -->
+<div class="auth-wrapper" id="login-wrapper">
+  <div class="auth-box">
+    <img src="images/chillers_logo.png" alt="Kirloskar Logo" class="auth-logo" onerror="this.style.display='none'">
+    <h2>LOGIN</h2>
+    <div class="error-msg" id="login-error" style="display:none; color:red; margin-bottom:15px; font-weight:bold;"></div>
+
+    <input type="email" id="login-email" class="auth-input" placeholder="Enter Your Email Address"
+           onkeydown="if(event.key==='Enter') doLogin()">
+    <input type="password" id="login-pass" class="auth-input" placeholder="Password"
+           onkeydown="if(event.key==='Enter') doLogin()">
+
+    <button class="auth-btn" onclick="doLogin()">LOGIN</button>
+
+    <div class="auth-links">
+      <a onclick="showRegister()">New User? Register</a>
+      <a onclick="showRegister()"> forget password </a>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MAIN APP ════════ -->
+<div id="main-app" style="display:none;">
+  <div class="selection-box" id="selection-form">
+    <div class="tool-header">
+      <h2>Kirloskar Selection Tool</h2>
+      <div>
+        <button class="btn-reject" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="input-group"><label>Client Name</label><input type="text" id="client" value="KCPL"></div>
+      <div class="input-group"><label>Project Name</label><input type="text" id="project" value=""></div>
+      <div class="input-group"><label>Project Incharge</label><input type="text" id="proj-incharge" value=""></div>
+
+      <div class="input-group"><label>Application</label>
+        <select id="app-select" onchange="updateProducts()">
+          <option value="Chiller">Chiller</option>
+          <option value="HeatPump">Heat Pump</option>
+        </select>
+      </div>
+      <div class="input-group" id="product-group"><label>Product Type</label>
+        <select id="product-select" onchange="updateModels()"></select>
+      </div>
+      <div class="input-group"><label>Model</label>
+        <select id="model-select"></select>
+      </div>
+      <div class="input-group"><label>Condition</label>
+        <select id="cond-select"></select>
+      </div>
+    </div>
+    <button class="gen-btn" onclick="generateReport()">VIEW OFFICIAL REPORT</button>
+  </div>
+
+  <div class="report-wrapper" id="report-wrapper" style="display:none;">
+    <div class="btn-bar">
+      <button class="back-btn" onclick="goBack()">← BACK TO EDIT</button>
+      <button class="pnid-btn" id="btn-cop"  onclick="openCopChartPage()"  style="display:none; background:#1a2a5e;">📈 COP CHART</button>
+      <button class="pnid-btn" id="btn-calc" onclick="openCalcModal()"     style="display:none; background:#16a34a;">💰 SAVINGS CALCULATOR</button>
+      <button class="pnid-btn" id="btn-pnid" onclick="openPnIdModal()"     style="display:none;">⚙️ VIEW P&ID</button>
+      <button class="print-btn" onclick="downloadPDF()">⬇ DOWNLOAD PDF</button>
+    </div>
+
+    <div class="report-container" id="report-content">
+      <div class="header-top">
+        <div>
+          <div class="comp-name">KIRLOSKAR CHILLERS PRIVATE LIMITED</div>
+          <div class="comp-sub">A Kirloskar Group Company</div>
+        </div>
+        <img src="images/chillers_logo.png" alt="Kirloskar Logo" class="logo-img" onerror="this.style.display='none'">
+      </div>
+
+      <div class="version-info">
+        Version : 1.1.0 | Release Date: 2026/03/31
+        <div style="float:right">Print Date: <span id="p-date"></span></div>
+      </div>
+
+      <div class="section-header first-header">PROJECT DETAILS</div>
+      <table>
+        <colgroup><col style="width:22%"><col style="width:22%"><col style="width:22%"><col style="width:28%"></colgroup>
+        <tr><td class="label-cell">Client</td><td class="v-sep" id="d-client"></td><td class="label-cell v-sep">Appliance/Type</td><td class="v-sep" id="d-app-type"></td></tr>
+        <tr><td class="label-cell">Project Name</td><td class="v-sep" id="d-project"></td><td class="label-cell v-sep">Cooling/Heating Tech</td><td class="v-sep" id="d-tech"></td></tr>
+        <tr><td class="label-cell">Project Incharge</td><td class="v-sep" id="d-incharge"></td><td class="label-cell v-sep">Brand</td><td class="v-sep">Kirloskar Chillers</td></tr>
+        <tr><td class="label-cell">Model</td><td class="v-sep" id="d-model-name"></td><td class="label-cell v-sep">Conditions</td><td class="v-sep" id="d-condition"></td></tr>
+        <tr id="bmg-row"><td class="label-cell">BMG</td><td class="v-sep" id="d-bmg"></td><td class="label-cell v-sep">Starter Type</td><td class="v-sep">Star Delta</td></tr>
+        <tr id="starter-row-ahri" style="display:none;"><td class="label-cell">Starter Type</td><td class="v-sep">Star Delta</td><td class="label-cell v-sep"></td><td class="v-sep"></td></tr>
+      </table>
+
+      <div id="chiller-sections">
+        <div class="section-header" id="d-rating-hdr">RATED PERFORMANCE AT STANDARD RATING CONDITIONS AS PER TABLE 1, IS 16590 : 2023</div>
+        <table>
+          <tr>
+            <th class="table-header-cell">Compressor</th>
+            <th class="v-sep table-header-cell">Evaporator</th>
+            <th class="v-sep table-header-cell">Air Cooled Condenser</th>
+          </tr>
+          <tr>
+            <td style="padding:0;vertical-align:top;"><table class="inner-table" id="comp-data"></table></td>
+            <td class="v-sep" style="padding:0;vertical-align:top;"><table class="inner-table" id="evap-data"></table></td>
+            <td class="v-sep" style="padding:0;vertical-align:top;"><table class="inner-table" id="cond-data"></table></td>
+          </tr>
+        </table>
+
+        <div class="section-header" id="d-eff-hdr">INDIAN SEASONAL ENERGY EFFICIENCY RATIO (ISEER) AS PER ANNEX C, IS 16590 : 2023</div>
+        <table id="efficiency-table"></table>
+
+        <div class="section-header" id="d-perf-hdr">PERFORMANCE DETAILS</div>
+        <table class="perf-table bordered-table">
+          <thead>
+            <tr><th rowspan="2">load pts</th><th rowspan="2">% Load</th><th rowspan="2">Capacity<br>(kW)</th><th rowspan="2">Power<br>(kW)</th><th rowspan="2">COP<br>(kW/kW)</th><th rowspan="2">RLA<br>(A)</th><th colspan="4">Evaporator</th><th colspan="1">Air Cooled Condenser</th></tr>
+            <tr><th>Flow<br>(m³/h)</th><th>T in<br>(°C)</th><th>T out<br>(°C)</th><th>Pd<br>(kPa)</th><th>Ambient Temperature<br>(°C)</th></tr>
+          </thead>
+          <tbody id="perf-body"></tbody>
+        </table>
+
+        <div class="section-header" id="elevated-hdr">PERFORMANCE DETAILS AT ELEVATED TEMPERATURE</div>
+        <table class="perf-table bordered-table" id="elevated-section">
+          <thead>
+            <tr><th rowspan="2">load pts</th><th rowspan="2">% Load</th><th rowspan="2">Capacity<br>(kW)</th><th rowspan="2">Power<br>(kW)</th><th rowspan="2">COP<br>(kW/kW)</th><th rowspan="2">RLA<br>(A)</th><th colspan="4">Evaporator</th><th colspan="1">Air Cooled Condenser</th></tr>
+            <tr><th>Flow<br>(m³/h)</th><th>T in<br>(°C)</th><th>T out<br>(°C)</th><th>Pd<br>(kPa)</th><th>Ambient Temperature<br>(°C)</th></tr>
+          </thead>
+          <tbody id="elevated-perf-body"></tbody>
+        </table>
+
+        <div class="section-header">MOTOR AND PHYSICAL DATA</div>
+        <table id="physical-table"></table>
+      </div>
+
+      <div id="hp-sections" style="display:none;"></div>
+
+      <div class="section-header">NOTES</div>
+      <div id="notes-area"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ P&ID MODAL ════════ -->
+<div id="pnid-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closePnIdModal()">&times;</span>
+    <div class="modal-header">Piping and Instrumentation Diagram (P&amp;ID)</div>
+    <img id="pnid-image" src="images/HEATpump GA.png" alt="P&ID Diagram"
+         style="width:100%;max-height:65vh;object-fit:contain;border:1px solid #ddd;margin-bottom:15px;"
+         onerror="this.onerror=null;this.src='https://via.placeholder.com/800x400.png?text=P%26ID+Not+Found';">
+    <div><button class="pnid-btn" onclick="downloadPnIdImage()">⬇ DOWNLOAD P&amp;ID IMAGE</button></div>
+  </div>
+</div>
+
+<!-- ════════ SAVINGS CALCULATOR MODAL ════════ -->
+<div id="calc-modal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:950px;">
+    <span class="close-btn" onclick="closeCalcModal()">&times;</span>
+    <div class="modal-header" style="background:var(--navy);color:#fff;padding:12px;font-weight:bold;font-size:16px;border-radius:4px 4px 0 0;">
+      Economic Benefits Calculator (Heat Pump vs Traditional)
+    </div>
+    <div style="margin-top:20px;text-align:left;">
+      <h4 style="color:var(--navy);margin-bottom:12px;border-bottom:2px solid #ccc;padding-bottom:5px;font-size:15px;">1. Input Parameters</h4>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:5px;">
+        <div class="input-group"><label style="font-weight:600;font-size:12px;">Inlet Water Temp (°C)</label><select id="calc-inlet" onchange="runCalc()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:3px;"></select></div>
+        <div class="input-group"><label style="font-weight:600;font-size:12px;">Outlet Water Temp (°C)</label><select id="calc-outlet" onchange="runCalc()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:3px;"></select></div>
+        <div class="input-group"><label style="font-weight:600;font-size:12px;">Hot Water Req. (L/Day)</label><input type="number" id="calc-qty" value="2000" oninput="runCalc()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:3px;"></div>
+        <div class="input-group"><label style="font-weight:600;font-size:12px;color:#e8a020;">Heat Pump COP</label><input type="number" id="calc-cop-input" step="0.1" oninput="handleCOPInput()" onblur="validateCOP()" style="width:100%;padding:6px;border:2px solid #e8a020;border-radius:3px;font-weight:bold;"></div>
+        <div class="input-group"><label style="font-weight:600;font-size:12px;">Electricity Rate (₹/kWh)</label><select id="calc-elec" onchange="runCalc()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:3px;"></select></div>
+        <div class="input-group"><label style="font-weight:600;font-size:12px;">LPG Rate (₹/kg)</label><select id="calc-lgp" onchange="runCalc()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:3px;"></select></div>
+        <div class="input-group"><label style="font-weight:600;font-size:12px;">PNG Rate (₹/Sm³)</label><select id="calc-png" onchange="runCalc()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:3px;"></select></div>
+      </div>
+      <small id="cop-warning" style="color:red;display:none;font-weight:bold;margin-bottom:15px;">* COP must be between 2.0 and 5.0</small>
+
+      <h4 style="color:var(--navy);margin-top:25px;margin-bottom:12px;border-bottom:2px solid #ccc;padding-bottom:5px;font-size:15px;">2. Calculation Results</h4>
+      <div style="display:flex;gap:40px;background:#f0f2f9;padding:12px 20px;border-radius:4px;margin-bottom:20px;font-size:14px;border:1px solid var(--border);">
+        <div>Temp. Diff (ΔT): <strong id="r-dt" style="color:var(--navy);font-size:15px;"></strong></div>
+        <div>Daily Heat Load: <strong id="r-heat" style="color:var(--navy);font-size:15px;"></strong></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;">
+        <div style="background:#f8fcf9;border:1px solid #86efac;border-top:4px solid #16a34a;padding:15px;border-radius:5px;">
+          <div style="color:#16a34a;font-weight:900;font-size:14px;margin-bottom:10px;border-bottom:1px solid #dcfce7;padding-bottom:6px;">✔️ Heat Pump</div>
+          <table style="width:100%;font-size:12.5px;line-height:2;">
+            <tr><td>COP:</td><td style="text-align:right;font-weight:bold;" id="r-hp-eff"></td></tr>
+            <tr><td>Consumption:</td><td style="text-align:right;" id="r-hp-kwh"></td></tr>
+            <tr><td>Cost / Day:</td><td style="text-align:right;" id="r-hp-day"></td></tr>
+            <tr><td>Cost / Month:</td><td style="text-align:right;" id="r-hp-month"></td></tr>
+            <tr><td style="border-top:1px solid #ccc;font-weight:bold;padding-top:5px;">Cost / Year:</td><td style="text-align:right;border-top:1px solid #ccc;font-weight:bold;padding-top:5px;" id="r-hp-year"></td></tr>
+          </table>
+        </div>
+        <div style="background:#fffafa;border:1px solid #fca5a5;border-top:4px solid #dc2626;padding:15px;border-radius:5px;">
+          <div style="color:#dc2626;font-weight:900;font-size:14px;margin-bottom:10px;border-bottom:1px solid #fee2e2;padding-bottom:6px;">⚡ Electric Geyser</div>
+          <table style="width:100%;font-size:12.5px;line-height:2;">
+            <tr><td>Consumption:</td><td style="text-align:right;" id="r-eg-kwh"></td></tr>
+            <tr><td>Cost / Day:</td><td style="text-align:right;" id="r-eg-day"></td></tr>
+            <tr><td>Cost / Month:</td><td style="text-align:right;" id="r-eg-month"></td></tr>
+            <tr><td style="border-top:1px solid #ccc;font-weight:bold;padding-top:5px;">Cost / Year:</td><td style="text-align:right;border-top:1px solid #ccc;font-weight:bold;padding-top:5px;" id="r-eg-year"></td></tr>
+            <tr><td colspan="2" style="padding-top:10px;padding-bottom:2px;"><span style="background:#dcfce7;color:#15803d;padding:2px 6px;border-radius:3px;font-weight:bold;font-size:10px;">SAVINGS / YEAR</span></td></tr>
+            <tr><td colspan="2" style="text-align:right;color:#16a34a;font-weight:bold;font-size:14px;" id="r-save-elec"></td></tr>
+          </table>
+        </div>
+        <div style="background:#fffdfa;border:1px solid #fcd34d;border-top:4px solid #e8a020;padding:15px;border-radius:5px;">
+          <div style="color:#e8a020;font-weight:900;font-size:14px;margin-bottom:10px;border-bottom:1px solid #fef3c7;padding-bottom:6px;">🔥 LPG Boiler</div>
+          <table style="width:100%;font-size:12.5px;line-height:2;">
+            <tr><td>Consumption:</td><td style="text-align:right;" id="r-lgp-cons"></td></tr>
+            <tr><td>Cost / Day:</td><td style="text-align:right;" id="r-lgp-day"></td></tr>
+            <tr><td>Cost / Month:</td><td style="text-align:right;" id="r-lgp-month"></td></tr>
+            <tr><td style="border-top:1px solid #ccc;font-weight:bold;padding-top:5px;">Cost / Year:</td><td style="text-align:right;border-top:1px solid #ccc;font-weight:bold;padding-top:5px;" id="r-lgp-year"></td></tr>
+            <tr><td colspan="2" style="padding-top:10px;padding-bottom:2px;"><span style="background:#dcfce7;color:#15803d;padding:2px 6px;border-radius:3px;font-weight:bold;font-size:10px;">SAVINGS / YEAR</span></td></tr>
+            <tr><td colspan="2" style="text-align:right;color:#16a34a;font-weight:bold;font-size:14px;" id="r-save-lgp"></td></tr>
+          </table>
+        </div>
+        <div style="background:#f8f9fd;border:1px solid #93c5fd;border-top:4px solid #1a2a5e;padding:15px;border-radius:5px;">
+          <div style="color:#1a2a5e;font-weight:900;font-size:14px;margin-bottom:10px;border-bottom:1px solid #dbeafe;padding-bottom:6px;">🏭 PNG Boiler</div>
+          <table style="width:100%;font-size:12.5px;line-height:2;">
+            <tr><td>Consumption:</td><td style="text-align:right;" id="r-png-cons"></td></tr>
+            <tr><td>Cost / Day:</td><td style="text-align:right;" id="r-png-day"></td></tr>
+            <tr><td>Cost / Month:</td><td style="text-align:right;" id="r-png-month"></td></tr>
+            <tr><td style="border-top:1px solid #ccc;font-weight:bold;padding-top:5px;">Cost / Year:</td><td style="text-align:right;border-top:1px solid #ccc;font-weight:bold;padding-top:5px;" id="r-png-year"></td></tr>
+            <tr><td colspan="2" style="padding-top:10px;padding-bottom:2px;"><span style="background:#dcfce7;color:#15803d;padding:2px 6px;border-radius:3px;font-weight:bold;font-size:10px;">SAVINGS / YEAR</span></td></tr>
+            <tr><td colspan="2" style="text-align:right;color:#16a34a;font-weight:bold;font-size:14px;" id="r-save-png"></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ REGISTER MODAL ════════ -->
+<div id="register-modal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:480px;">
+    <span class="close-btn" onclick="closeRegisterModal()">&times;</span>
+    <div class="modal-header">Create New Account</div>
+
+    <div style="padding:25px 30px;" id="reg-step-1">
+      <h4 style="margin-bottom:15px;color:#1a2a5e;">Step 1: Personal Details</h4>
+      <input type="text"  id="reg-firstname" class="auth-input" placeholder="First Name">
+      <input type="text"  id="reg-surname"   class="auth-input" placeholder="Surname">
+      <input type="tel"   id="reg-phone"     class="auth-input" placeholder="Phone Number (10 digits)">
+      <button class="auth-btn" onclick="nextStep()" style="margin-top:20px;width:100%;">Next →</button>
+    </div>
+
+    <div style="padding:25px 30px;display:none;" id="reg-step-2">
+      <h4 style="margin-bottom:15px;color:#1a2a5e;">Step 2: Login Credentials</h4>
+      <input type="email"    id="reg-email" class="auth-input" placeholder="Email Address">
+      <input type="password" id="reg-pass"  class="auth-input" placeholder="Create Password">
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="auth-btn" onclick="prevStep()" style="background:#666;width:50%;">← Back</button>
+        <button class="auth-btn" onclick="registerUser()" style="width:50%;">Submit Registration</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALL LOGIC IS NOW HERE -->
+<script src="js/script.js"></script>
+
+</body>
+</html>
