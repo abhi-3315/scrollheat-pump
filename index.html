@@ -19,14 +19,11 @@
     <img src="images/chillers_logo.png" alt="Kirloskar Logo" class="auth-logo" onerror="this.style.display='none'">
     <h2>LOGIN</h2>
     <div class="error-msg" id="login-error" style="display:none; color:red; margin-bottom:15px; font-weight:bold;"></div>
-
     <input type="email" id="login-email" class="auth-input" placeholder="Enter Your Email Address"
            onkeydown="if(event.key==='Enter') doLogin()">
     <input type="password" id="login-pass" class="auth-input" placeholder="Password"
            onkeydown="if(event.key==='Enter') doLogin()">
-
     <button class="auth-btn" onclick="doLogin()">LOGIN</button>
-
     <div class="auth-links">
       <a onclick="showRegister()">New User? Register</a>
       <a onclick="showRegister()"> forget password </a>
@@ -43,12 +40,10 @@
         <button class="btn-reject" onclick="logout()">Logout</button>
       </div>
     </div>
-
     <div class="grid">
       <div class="input-group"><label>Client Name</label><input type="text" id="client" value="KCPL"></div>
       <div class="input-group"><label>Project Name</label><input type="text" id="project" value=""></div>
       <div class="input-group"><label>Project Incharge</label><input type="text" id="proj-incharge" value=""></div>
-
       <div class="input-group"><label>Application</label>
         <select id="app-select" onchange="updateProducts()">
           <option value="Chiller">Chiller</option>
@@ -73,6 +68,7 @@
       <button class="back-btn" onclick="goBack()">← BACK TO EDIT</button>
       <button class="pnid-btn" id="btn-cop"  onclick="openCopChartPage()"  style="display:none; background:#1a2a5e;">📈 COP CHART</button>
       <button class="pnid-btn" id="btn-calc" onclick="openCalcModal()"     style="display:none; background:#16a34a;">💰 SAVINGS CALCULATOR</button>
+      <button class="pnid-btn" id="btn-ff"   onclick="openFFModal()"       style="display:none; background:#7c3aed;">🌡️ FOULING FACTOR</button>
       <button class="pnid-btn" id="btn-pnid" onclick="openPnIdModal()"     style="display:none;">⚙️ VIEW P&ID</button>
       <button class="print-btn" onclick="downloadPDF()">⬇ DOWNLOAD PDF</button>
     </div>
@@ -181,7 +177,6 @@
         <div class="input-group"><label style="font-weight:600;font-size:12px;">PNG Rate (₹/Sm³)</label><select id="calc-png" onchange="runCalc()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:3px;"></select></div>
       </div>
       <small id="cop-warning" style="color:red;display:none;font-weight:bold;margin-bottom:15px;">* COP must be between 2.0 and 5.0</small>
-
       <h4 style="color:var(--navy);margin-top:25px;margin-bottom:12px;border-bottom:2px solid #ccc;padding-bottom:5px;font-size:15px;">2. Calculation Results</h4>
       <div style="display:flex;gap:40px;background:#f0f2f9;padding:12px 20px;border-radius:4px;margin-bottom:20px;font-size:14px;border:1px solid var(--border);">
         <div>Temp. Diff (ΔT): <strong id="r-dt" style="color:var(--navy);font-size:15px;"></strong></div>
@@ -241,7 +236,6 @@
   <div class="modal-content" style="max-width:480px;">
     <span class="close-btn" onclick="closeRegisterModal()">&times;</span>
     <div class="modal-header">Create New Account</div>
-
     <div style="padding:25px 30px;" id="reg-step-1">
       <h4 style="margin-bottom:15px;color:#1a2a5e;">Step 1: Personal Details</h4>
       <input type="text"  id="reg-firstname" class="auth-input" placeholder="First Name">
@@ -249,7 +243,6 @@
       <input type="tel"   id="reg-phone"     class="auth-input" placeholder="Phone Number (10 digits)">
       <button class="auth-btn" onclick="nextStep()" style="margin-top:20px;width:100%;">Next →</button>
     </div>
-
     <div style="padding:25px 30px;display:none;" id="reg-step-2">
       <h4 style="margin-bottom:15px;color:#1a2a5e;">Step 2: Login Credentials</h4>
       <input type="email"    id="reg-email" class="auth-input" placeholder="Email Address">
@@ -262,8 +255,13 @@
   </div>
 </div>
 
-<!-- ALL LOGIC IS NOW HERE -->
-<script src="js/script.js"></script>
+<!-- ════════ FOULING FACTOR MODAL ════════ -->
+<div id="ff-modal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:560px;padding:0;border-radius:6px;overflow:hidden;position:relative;width:fit-content;">
+    <div id="ff-modal-inner"></div>
+  </div>
+</div>
 
+<script src="js/script.js"></script>
 </body>
 </html>

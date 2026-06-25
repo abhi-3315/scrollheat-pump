@@ -157,3 +157,13 @@ th, td { border: none; padding: 3px 5px; font-size: 9.5px; font-weight: bold; ve
   th.sticky-col { background: #f8f9fc; z-index: 11; }
   tr:nth-child(even) td.sticky-col { background: #fafbff; }
   tr:hover td.sticky-col { background: #fdfdff; }
+  .bordered-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+.bordered-table th, .bordered-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+#ff-calc-body tr:nth-child(even) { background-color: #f2f2f2; }
